@@ -32,7 +32,7 @@ async def banner() -> None:
                  ▀       ▀▀▀    ▀
     '''
     _dev: discord.User = await ethium.fetch_user(843511119033401394)
-    cmds = ' ~ '.join([cmd.name for cmd in ethium.commands])
+    cmds: str = ' ~ '.join([cmd.name for cmd in ethium.commands])
     cls()
     gradient_print(BANNER, start_color=Color.thistle, end_color=Color.white_smoke)
     log.info(f'Logged in as {ethium.user}')
