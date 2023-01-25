@@ -3,7 +3,7 @@ import logging as log
 import os
 import sys
 from multiprocessing import Process
-from typing import Dict, Optional, Union
+from typing import Callable, Dict, Optional, Union
 
 import discord
 import httpx
@@ -19,7 +19,7 @@ ROLES_NAME: str = ''
 SPAM_MSG: str = ''
 
 
-cls = lambda: os.system('cls || clear')
+cls: Callable[[], None] = lambda: os.system('cls || clear')
 
 
 async def banner() -> None:
