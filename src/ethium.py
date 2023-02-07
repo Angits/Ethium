@@ -3,7 +3,7 @@ import logging as log
 import os
 import sys
 from datetime import datetime as dt
-from multiprocessing import Process
+from threading import Thread
 from typing import Callable, Dict, Optional, Union
 
 import discord
@@ -165,12 +165,12 @@ async def nuke(ctx: cmds.Context) -> None:
     _URL: str = 'https://discord.com/api/v10/channels/%s'
     _HEADERS: Dict[str, str] = {'Authorization': f'Bot {TOKEN}'}
 
-    async def del_channel(channel_id) -> None:
+    async def del_channel(channel_id: int) -> None:
         async with httpx.AsyncClient() as client:
             await client.delete(_URL % channel_id, headers=_HEADERS)
 
     for channel in guild.channels:
-        Process(target=asyncio.run, args=(del_channel(channel.id),)).start()
+        Thread(target=asyncio.run, args=(del_channel(channel.id),)).start()
         log.info(f'Deleted channel {channel}')
 
     channel: discord.TextChannel = await guild.create_text_channel(CHANNELS_NAME)
