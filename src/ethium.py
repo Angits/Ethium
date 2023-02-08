@@ -220,11 +220,10 @@ async def mass_ban(ctx: cmds.Context) -> None:
     :return: None.
     '''
     guild: discord.Guild = ctx.guild
+    bot_member = guild.get_member(ethium.user.id)
     for member in [
         member for member in guild.members if not member in (ctx.author, ethium.user)
     ]:
-
-        bot_member = await ethium.get_member(ethium.user.id)
 
         if member.top_role.position < bot_member.top_role.position:
             continue
