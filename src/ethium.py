@@ -39,11 +39,11 @@ async def banner() -> None:
                  ▀       ▀▀▀    ▀
     '''
     _dev: discord.User = await ethium.fetch_user(843511119033401394)
-    cmds: str = ' ~ '.join([cmd.name for cmd in ethium.commands])
+    CMDS: str = ' ~ '.join([cmd.name for cmd in ethium.commands])
     cls()
     gradient_print(BANNER, start_color=Color.thistle, end_color=Color.white_smoke)
     log.info(f'Logged in as {ethium.user}')
-    log.info(f'Commands: {cmds}')
+    log.info(f'Commands: {CMDS}')
     log.info(f'Prefix: {ethium.command_prefix}')
     log.info(f'Coded by {_dev}\n')
 
@@ -220,7 +220,7 @@ async def mass_ban(ctx: cmds.Context) -> None:
     :return: None.
     '''
     guild: discord.Guild = ctx.guild
-    bot_member = guild.get_member(ethium.user.id)
+    bot_member: Optional[discord.Member] = guild.get_member(ethium.user.id)
     for member in [
         member for member in guild.members if not member in (ctx.author, ethium.user)
     ]:
