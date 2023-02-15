@@ -31,7 +31,7 @@ def get_config() -> Dict[str, str]:
         log.error(f'An error occurred while obtaining the configuration {e}')
 
 
-def append_data(info) -> None:
+def append_data(info: Dict[str, str]) -> None:
     '''
     The append_data function takes in a dictionary and appends it to the config.json file.
 
