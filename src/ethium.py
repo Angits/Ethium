@@ -69,7 +69,6 @@ def rewrite_config() -> Dict[str, str]:
             del line
 
         config = prompt()
-        append_data(config)
         return config
 
 
@@ -91,18 +90,13 @@ def prompt() -> Dict[str, str]:
     ]
     try:
         answers = inquirer.prompt(QUESTIONS)
+        append_data(answers)
         return answers
     except Exception as e:
         log.error(f'Error {e}')
 
 
-config = get_config()
-
-if not config:
-    config = prompt()
-    append_data(config)
-else:
-    config = rewrite_config()
+config = rewrite_config() if get_config() else prompt()
 
 token: str = config['Token']
 prefix: str = config['Prefix']
