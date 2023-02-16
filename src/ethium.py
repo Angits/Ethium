@@ -45,7 +45,7 @@ def append_data(info) -> None:
         log.error(f'An error occurred while adding information to the config file {e}')
 
 
-def rewrite_config() -> None:
+def rewrite_config() -> Dict[str, str]:
     '''
     The rewrite_config function is used to rewrite the config file.
     It is called when the user enters 'rewrite' as an argument in the command line.
@@ -70,6 +70,7 @@ def rewrite_config() -> None:
 
         config: Dict[str, str] = prompt()
         append_data(config)
+        return config
 
 
 def prompt() -> Dict[str, str]:
@@ -95,14 +96,13 @@ def prompt() -> Dict[str, str]:
         log.error(f'Error {e}')
 
 
-config: Dict[str, str] = get_config()
+config = get_config()
 
 if not config:
     config: Dict[str, str] = prompt()
     append_data(config)
 else:
-    rewrite_config()
-    config = get_config()
+    config = rewrite_config()
 
 token: str = config['Token']
 prefix: str = config['Prefix']
