@@ -64,11 +64,11 @@ def rewrite_config() -> Dict[str, str]:
     except Exception as e:
         log.error(f'An error occurred while making the prompt {e}')
     if answers['config'] == 'YES':
-        data: Dict[str, str] = get_config()
+        data = get_config()
         for line in data:
             del line
 
-        config: Dict[str, str] = prompt()
+        config = prompt()
         append_data(config)
         return config
 
@@ -99,7 +99,7 @@ def prompt() -> Dict[str, str]:
 config = get_config()
 
 if not config:
-    config: Dict[str, str] = prompt()
+    config = prompt()
     append_data(config)
 else:
     config = rewrite_config()
