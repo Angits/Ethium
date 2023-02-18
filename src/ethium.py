@@ -90,13 +90,15 @@ def prompt() -> Dict[str, str]:
     ]
     try:
         answers = inquirer.prompt(QUESTIONS)
-        append_data(answers)
+        if not answers:
+            raise ValueError('Invalid data')
+
         return answers
     except Exception as e:
-        log.error(f'Error {e}')
+        log.error(f'An error occurred while making the prompt {e}')
 
 
-config = rewrite_config() if get_config() else prompt()
+config = rewrite_config() if get_config() else append_data(prompt())
 
 token: str = config['Token']
 prefix: str = config['Prefix']
