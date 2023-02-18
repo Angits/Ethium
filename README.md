@@ -7,9 +7,9 @@ The fastest nuker bot on *Discord* with undefined pings (**no ratelimit**).
 ### How to Install
 1. U need installed python>=3.10 & git
 1. `git clone https://github.com/Angits/Ethium.git`
-2. Set ur bot config in ethium.py (;13 - ;19)
-3. `pip install -r requirements.txt`
-4. `cd src && python3 ethium.py`
+4. `cd Ethium`
+2. `pip install -r requirements.txt`
+3. `cd src && python3 ethium.py`
 
 ### Support
 If you need some help with the tool.
