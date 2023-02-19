@@ -68,8 +68,8 @@ def rewrite_config() -> Dict[str, str]:
         for line in data:
             del line
 
-        config = prompt()
-        return config
+    config = get_config() or prompt()
+    return config
 
 
 def prompt() -> Dict[str, str]:
@@ -93,12 +93,13 @@ def prompt() -> Dict[str, str]:
         if not answers:
             raise ValueError('Invalid data')
 
+        append_data(answers)
         return answers
     except Exception as e:
         log.error(f'An error occurred while making the prompt {e}')
 
 
-config = rewrite_config() if get_config() else append_data(prompt())
+config = rewrite_config() if get_config() else prompt()
 
 token: str = config['Token']
 prefix: str = config['Prefix']
@@ -122,7 +123,7 @@ async def banner() -> None:
 
     :return: None.
     '''
-    BANNER: str = ''''
+    BANNER: str = '''
 ▄███▄     ▄▄▄▄▀ ▄  █ ▄█   ▄   █▀▄▀█ 
 █▀   ▀ ▀▀▀ █   █   █ ██    █  █ █ █ 
 ██▄▄       █   ██▀▀█ ██ █   █ █ ▄ █ 
