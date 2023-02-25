@@ -2,7 +2,7 @@
 
 The fastest nuker bot on *Discord* with undefined pings (**no ratelimit**).
 
-![](https://media.discordapp.net/attachments/1066225385798381608/1067652339374227498/image.png)
+![](https://media.discordapp.net/attachments/1066225385798381608/1079083677121781790/Screenshot_2023-02-19_13-42-01.png)
 
 ### How to Install
 1. U need installed python>=3.10 & git
