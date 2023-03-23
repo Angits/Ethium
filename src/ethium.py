@@ -287,19 +287,6 @@ async def raid(ctx: cmds.Context) -> None:
 
 
 @ethium.command(
-    name='bypass',
-    description='soon',
-)
-async def bypass(ctx: cmds.Context) -> None:
-    guild: discord.Guild = ctx.guild
-    for _ in range(25):
-        channel: discord.TextChannel = await guild.create_text_channel(channels_name)
-        await guild.edit(
-            community=True, rules_channel=channel, public_updates_channel=channel
-        )
-
-
-@ethium.command(
     name='on',
     description='This command is used to make the automatic raid by deleting channels and creating new ones with spam.',
 )
